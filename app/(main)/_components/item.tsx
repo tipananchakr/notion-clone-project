@@ -151,13 +151,14 @@ export const Item = ({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-60"
+              className="w-60 rounded-sm"
               align="start"
               side="right"
               forceMount
             >
               <DropdownMenuItem
                 onClick={onArchive}
+                className="rounded-sm cursor-pointer"
               >
                 <Trash className="h-4 w-4 mr-2"/>
                 Delete
