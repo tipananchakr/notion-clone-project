@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import { ChevronsLeft, MenuIcon, Plus, PlusCircle, Search, SettingsIcon, Trash } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import { ElementRef, useEffect, useRef, useState } from "react"
 import { useMediaQuery } from "usehooks-ts"
 import { UserItem } from "./user-item"
@@ -13,10 +13,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { TrashBox } from "./trash-box"
 import { useSearch } from "@/hooks/use-search"
 import { useSetting } from "@/hooks/use-setting"
+import { Navbar } from "./navbar"
 
 export const Navigation = () => {
   const setting = useSetting()
   const search = useSearch()
+  const params = useParams()
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
   const create = useMutation(api.documents.create)
@@ -24,7 +26,7 @@ export const Navigation = () => {
   const isResizingRef = useRef(false)
   const sidebarRef = useRef<ElementRef<"aside">>(null)
   const navbarRef = useRef<ElementRef<"div">>(null)
-  
+
   const [isResetting, setIsResetting] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
@@ -74,7 +76,7 @@ export const Navigation = () => {
   }
 
   const collapse = () => {
-    if(sidebarRef.current && navbarRef.current) {
+    if (sidebarRef.current && navbarRef.current) {
       setIsCollapsed(true)
       setIsResetting(true)
 
@@ -97,7 +99,7 @@ export const Navigation = () => {
     })
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     if (isMobile) {
       collapse()
     } else {
@@ -114,15 +116,15 @@ export const Navigation = () => {
 
   return (
     <>
-      <aside 
+      <aside
         ref={sidebarRef}
         className={cn(
           "group/sidebar h-full bg-secondary overflow-y-auto relative flex w-60 flex-col z-999",
           isResetting && "transition-all ease-in-out duration-300",
           isMobile && "w-0",
         )}
-      >   
-        <div 
+      >
+        <div
           onClick={collapse}
           role="button"
           className={
@@ -132,10 +134,10 @@ export const Navigation = () => {
             )
           }
         >
-          <ChevronsLeft className="h-6 w-6"/>
+          <ChevronsLeft className="h-6 w-6" />
         </div>
         <div>
-          <UserItem/>
+          <UserItem />
           <Item
             label="Search"
             icon={Search}
@@ -147,17 +149,17 @@ export const Navigation = () => {
             icon={SettingsIcon}
             onClick={setting.onOpen}
           />
-          <Item 
-            onClick={handleCreate} 
-            label = "New Page" 
+          <Item
+            onClick={handleCreate}
+            label="New Page"
             icon={PlusCircle}
           />
         </div>
-       
+
         <div className="mt-4">
 
-          <DocumentList/>
-          <Item 
+          <DocumentList />
+          <Item
             onClick={handleCreate}
             icon={Plus}
             label="Add a page."
@@ -175,20 +177,20 @@ export const Navigation = () => {
               side={isMobile ? "bottom" : "right"}
               className="p-0 w-72 rounded-md"
             >
-              <TrashBox/>
+              <TrashBox />
             </PopoverContent>
           </Popover>
 
         </div>
 
-        <div 
+        <div
           onMouseDown={handleMouseDown}
           onClick={resetWidth}
           className="opacity-0 group-hover/sidebar:opacity-100 transition cursor-ew-resize absolute h-full w-1 bg-primary/10 right-0 top-0"
         />
 
       </aside>
-      <div 
+      <div
         ref={navbarRef}
         className={cn(
           "absolute top-0 z-999 left-60 w-[calc(100% - 240px)]",
@@ -196,9 +198,17 @@ export const Navigation = () => {
           isMobile && "left-0 w-full",
         )}
       >
-        <nav className="bg-transparent px-3 py-2 w-full">
-          {(isMobile || isCollapsed) && <MenuIcon onClick={resetWidth} role="button" className="h-6 w-6 text-muted-foreground"/>}
-        </nav>
+        {!!params.documentId ? (
+          <Navbar
+            isCollapsed={isCollapsed}
+            onResetWidth={resetWidth}
+          />
+        ) : (
+          <nav className="bg-transparent px-3 py-2 w-full">
+            {(isMobile || isCollapsed) && <MenuIcon onClick={resetWidth} role="button" className="h-6 w-6 text-muted-foreground" />}
+          </nav>
+        )}
+
       </div>
     </>
   )
