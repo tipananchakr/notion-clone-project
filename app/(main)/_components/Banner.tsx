@@ -54,7 +54,7 @@ export const Banner = ({
         size={"sm"}
         onClick={onRestore}
         variant={"outline"}
-        className="rounded-md border-white bg-transparent hover:bg-primary/5 text-white hover:text-white p-1 px-2 h-auto font-normal"
+        className=" border-white bg-transparent hover:bg-primary/5 text-white hover:text-white p-1 px-2 h-auto font-normal"
       >
         Restore page
       </Button>
@@ -65,7 +65,7 @@ export const Banner = ({
         <Button
           size={"sm"}
           variant={"outline"}
-          className="rounded-md border-white bg-transparent hover:bg-primary/5 text-white hover:text-white p-1 px-2 h-auto font-normal"
+          className=" border-white bg-transparent hover:bg-primary/5 text-white hover:text-white p-1 px-2 h-auto font-normal"
         >
           Delete forever
         </Button>
