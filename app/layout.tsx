@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 
-import {Toaster} from "sonner"
+import { Toaster } from "sonner"
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -9,6 +9,8 @@ import { ConvexClientProvider } from "@/components/providers/convex-provider";
 import { SettingModal } from "@/components/modals/setting-modal";
 
 import "./globals.css";
+import { CoverImageModal } from "@/components/modals/cover-image-modal";
+import { EdgeStoreProvider } from "@/lib/edgestore";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -52,17 +54,22 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ConvexClientProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="motion-theme"
-          >
-            <Toaster position="bottom-center"/>
-            <SettingModal/>
-            {children}
-          </ThemeProvider>
+          <EdgeStoreProvider>
+
+
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+              storageKey="motion-theme"
+            >
+              <Toaster position="bottom-center" />
+              <SettingModal />
+              <CoverImageModal />
+              {children}
+            </ThemeProvider>
+          </EdgeStoreProvider>
         </ConvexClientProvider>
 
       </body>
