@@ -1,11 +1,11 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/spinner';
+import { cn } from '@/lib/utils';
 import {
   AlertCircleIcon,
+  ImagePlusIcon,
   Trash2Icon,
-  UploadCloudIcon,
   XIcon,
 } from 'lucide-react';
 import * as React from 'react';
@@ -14,251 +14,242 @@ import { ProgressCircle } from './progress-circle';
 import { formatFileSize, useUploader } from './uploader-provider';
 
 const DROPZONE_VARIANTS = {
-  base: 'relative rounded-md p-4 flex justify-center items-center flex-col cursor-pointer min-h-[150px] min-w-[200px] border-2 border-dashed border-muted-foreground transition-colors duration-200 ease-in-out',
-  image: 'border-0 p-0 min-h-0 min-w-0 relative bg-muted shadow-md',
-  active: 'border-primary',
+  base: 'group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-border/70 bg-gradient-to-br from-muted/40 via-background to-muted/20 shadow-sm outline-none transition-all duration-300 ease-out hover:border-primary/50 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+  image:
+    'cursor-pointer border border-border/60 bg-muted p-0 shadow-md ring-1 ring-black/5 dark:ring-white/10',
+  active: 'border-primary/60 ring-2 ring-primary/20',
   disabled:
-    'bg-muted/50 border-muted-foreground/50 cursor-default pointer-events-none',
-  accept: 'border-primary bg-primary/10',
-  reject: 'border-destructive bg-destructive/10',
+    'cursor-not-allowed border-border/50 bg-muted/30 opacity-60 shadow-none hover:border-border/50 hover:shadow-sm',
+  accept:
+    'scale-[1.01] border-primary bg-primary/5 shadow-md ring-2 ring-primary/20',
+  reject: 'border-destructive/60 bg-destructive/5 ring-2 ring-destructive/15',
 };
 
-/**
- * Props for the SingleImageDropzone component.
- *
- * @interface SingleImageDropzoneProps
- * @extends {React.HTMLAttributes<HTMLInputElement>}
- */
 export interface SingleImageDropzoneProps
   extends React.HTMLAttributes<HTMLInputElement> {
-  /**
-   * The width of the dropzone area in pixels.
-   */
   width: number;
-
-  /**
-   * The height of the dropzone area in pixels.
-   */
   height: number;
-
-  /**
-   * Whether the dropzone is disabled.
-   */
   disabled?: boolean;
-
-  /**
-   * Shows a loading overlay (e.g. when upload is handled outside UploaderProvider).
-   */
   isUploading?: boolean;
-
-  /**
-   * Options passed to the underlying react-dropzone component.
-   * Cannot include 'disabled', 'onDrop', 'maxFiles', or 'multiple' as they are handled internally.
-   */
   dropzoneOptions?: Omit<
     DropzoneOptions,
     'disabled' | 'onDrop' | 'maxFiles' | 'multiple'
   >;
 }
 
-/**
- * A single image upload component with preview and upload status.
- *
- * This component allows users to upload a single image, shows a preview,
- * displays upload progress, and provides controls to remove or cancel the upload.
- *
- * @component
- * @example
- * ```tsx
- * <SingleImageDropzone
- *   width={320}
- *   height={320}
- *   dropzoneOptions={{ maxSize: 1024 * 1024 * 2 }} // 2MB
- * />
- * ```
- */
 const SingleImageDropzone = React.forwardRef<
   HTMLInputElement,
   SingleImageDropzoneProps
 >(
   (
-    { dropzoneOptions, width, height, className, disabled, isUploading, ...props },
+    {
+      dropzoneOptions,
+      width,
+      height,
+      className,
+      disabled,
+      isUploading,
+      ...props
+    },
     ref,
   ) => {
-  const { fileStates, addFiles, removeFile, cancelUpload } = useUploader();
-  const [error, setError] = React.useState<string>();
+    const { fileStates, addFiles, removeFile, cancelUpload } = useUploader();
+    const [error, setError] = React.useState<string>();
 
-  const fileState = React.useMemo(() => fileStates[0], [fileStates]);
-  const maxSize = dropzoneOptions?.maxSize;
+    const fileState = React.useMemo(() => fileStates[0], [fileStates]);
+    const maxSize = dropzoneOptions?.maxSize;
 
-  // Create temporary URL for image preview before upload is complete
-  const tempUrl = React.useMemo(() => {
-    if (fileState?.file) {
-      return URL.createObjectURL(fileState.file);
-    }
-    return null;
-  }, [fileState]);
-
-  // Clean up temporary URL to prevent memory leaks
-  React.useEffect(() => {
-    return () => {
-      if (tempUrl) {
-        URL.revokeObjectURL(tempUrl);
+    const tempUrl = React.useMemo(() => {
+      if (fileState?.file) {
+        return URL.createObjectURL(fileState.file);
       }
-    };
-  }, [tempUrl]);
+      return null;
+    }, [fileState]);
 
-  const displayUrl = tempUrl ?? fileState?.url;
-  const isDisabled =
-    !!disabled ||
-    !!isUploading ||
-    fileState?.status === 'UPLOADING' ||
-    fileState?.status === 'COMPLETE'; // Disable when upload complete
-
-  const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
-    useDropzone({
-      accept: { 'image/*': [] }, // Accept only image files
-      multiple: false,
-      disabled: isDisabled,
-      onDrop: (acceptedFiles, rejectedFiles) => {
-        setError(undefined);
-
-        // Handle rejections first
-        if (rejectedFiles.length > 0) {
-          if (rejectedFiles[0]?.errors[0]) {
-            const error = rejectedFiles[0].errors[0];
-            const code = error.code;
-
-            // User-friendly error messages
-            const messages: Record<string, string> = {
-              'file-too-large': `The file is too large. Max size is ${formatFileSize(
-                maxSize ?? 0,
-              )}.`,
-              'file-invalid-type': 'Invalid file type.',
-              'too-many-files': 'You can only upload one file.',
-              default: 'The file is not supported.',
-            };
-
-            setError(messages[code] ?? messages.default);
-          }
-          return; // Exit early if there are any rejections
+    React.useEffect(() => {
+      return () => {
+        if (tempUrl) {
+          URL.revokeObjectURL(tempUrl);
         }
+      };
+    }, [tempUrl]);
 
-        // Handle accepted files only if there are no rejections
-        if (acceptedFiles.length > 0) {
-          // Remove existing file before adding a new one
-          if (fileStates[0]) {
-            removeFile(fileStates[0].key);
+    const displayUrl = tempUrl ?? fileState?.url;
+    const isDisabled =
+      !!disabled ||
+      !!isUploading ||
+      fileState?.status === 'UPLOADING' ||
+      fileState?.status === 'COMPLETE';
+
+    const { getRootProps, getInputProps, isFocused, isDragAccept, isDragReject } =
+      useDropzone({
+        accept: { 'image/*': [] },
+        multiple: false,
+        disabled: isDisabled,
+        onDrop: (acceptedFiles, rejectedFiles) => {
+          setError(undefined);
+
+          if (rejectedFiles.length > 0) {
+            if (rejectedFiles[0]?.errors[0]) {
+              const error = rejectedFiles[0].errors[0];
+              const code = error.code;
+
+              const messages: Record<string, string> = {
+                'file-too-large': `The file is too large. Max size is ${formatFileSize(
+                  maxSize ?? 0,
+                )}.`,
+                'file-invalid-type': 'Invalid file type.',
+                'too-many-files': 'You can only upload one file.',
+                default: 'The file is not supported.',
+              };
+
+              setError(messages[code] ?? messages.default);
+            }
+            return;
           }
-          addFiles(acceptedFiles);
-        }
-      },
-      ...dropzoneOptions,
-    });
 
-  const dropZoneClassName = React.useMemo(
-    () =>
-      cn(
-        DROPZONE_VARIANTS.base,
-        isFocused && DROPZONE_VARIANTS.active,
-        isDisabled && DROPZONE_VARIANTS.disabled,
-        displayUrl && DROPZONE_VARIANTS.image,
-        isDragReject && DROPZONE_VARIANTS.reject,
-        isDragAccept && DROPZONE_VARIANTS.accept,
+          if (acceptedFiles.length > 0) {
+            if (fileStates[0]) {
+              removeFile(fileStates[0].key);
+            }
+            addFiles(acceptedFiles);
+          }
+        },
+        ...dropzoneOptions,
+      });
+
+    const dropZoneClassName = React.useMemo(
+      () =>
+        cn(
+          DROPZONE_VARIANTS.base,
+          isFocused && DROPZONE_VARIANTS.active,
+          isDisabled && DROPZONE_VARIANTS.disabled,
+          displayUrl && DROPZONE_VARIANTS.image,
+          isDragReject && DROPZONE_VARIANTS.reject,
+          isDragAccept && DROPZONE_VARIANTS.accept,
+          className,
+        ),
+      [
+        isFocused,
+        isDisabled,
+        displayUrl,
+        isDragAccept,
+        isDragReject,
         className,
-      ),
-    [isFocused, isDisabled, displayUrl, isDragAccept, isDragReject, className],
-  );
+      ],
+    );
 
-  // Combined error message from dropzone or file state
-  const errorMessage = error ?? fileState?.error;
+    const errorMessage = error ?? fileState?.error;
+    const showReplaceHint =
+      !!displayUrl && !isDisabled && !isUploading && fileState?.status !== 'UPLOADING';
 
-  return (
-    <div className="flex flex-col items-center">
-      <div
-        {...getRootProps({
-          className: dropZoneClassName,
-          style: {
-            width,
-            height,
-          },
-        })}
-      >
-        <input ref={ref} {...getInputProps()} {...props} />
+    return (
+      <div className="flex w-full flex-col items-center gap-3">
+        <div
+          {...getRootProps({
+            className: dropZoneClassName,
+            style: { width, height },
+          })}
+        >
+          <input ref={ref} {...getInputProps()} {...props} />
 
-        {displayUrl ? (
-          <img
-            className="h-full w-full rounded-md object-cover"
-            src={displayUrl}
-            alt={fileState?.file.name ?? 'uploaded image'}
-          />
-        ) : (
-          // Placeholder content shown when no image is selected
-          <div
-            className={cn(
-              'flex flex-col items-center justify-center gap-2 text-center text-xs text-muted-foreground',
-              isDisabled && 'opacity-50',
-            )}
-          >
-            <UploadCloudIcon className="mb-1 h-7 w-7" />
-            <div className="font-medium">
-              drag & drop an image or click to select
-            </div>
-            {maxSize && (
-              <div className="text-xs">Max size: {formatFileSize(maxSize)}</div>
-            )}
-          </div>
-        )}
+          {displayUrl ? (
+            <>
+              <img
+                className="h-full w-full object-cover"
+                src={displayUrl}
+                alt={fileState?.file.name ?? 'uploaded image'}
+              />
 
-        {/* Upload progress overlay */}
-        {displayUrl && (isUploading || fileState?.status === 'UPLOADING') && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-black/70">
-            {isUploading ? (
-              <Spinner size="icon" className="text-white" />
-            ) : (
-              <ProgressCircle progress={fileState.progress} />
-            )}
-          </div>
-        )}
-
-        {/* Remove/Cancel button */}
-        {displayUrl &&
-          !disabled &&
-          !isUploading &&
-          fileState &&
-          fileState.status !== 'COMPLETE' && (
-            <button
-              type="button"
-              className="group pointer-events-auto absolute right-1 top-1 z-10 transform rounded-full border border-muted-foreground bg-background p-1 shadow-md transition-all hover:scale-110"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering dropzone click
-                if (fileState.status === 'UPLOADING') {
-                  cancelUpload(fileState.key);
-                } else {
-                  removeFile(fileState.key);
-                  setError(undefined); // Clear any error when removing the file
-                }
-              }}
-            >
-              {fileState.status === 'UPLOADING' ? (
-                <XIcon className="block h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Trash2Icon className="block h-4 w-4 text-muted-foreground" />
+              {showReplaceHint && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/45 group-hover:opacity-100">
+                  <span className="rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-sm dark:bg-zinc-900/95 dark:text-zinc-100">
+                    Click to replace
+                  </span>
+                </div>
               )}
-            </button>
+            </>
+          ) : (
+            <div
+              className={cn(
+                'flex flex-col items-center justify-center gap-3 px-6 text-center',
+                isDisabled && 'opacity-50',
+              )}
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm ring-1 ring-primary/10 transition-transform duration-300 group-hover:scale-105">
+                <ImagePlusIcon className="h-7 w-7" strokeWidth={1.5} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold tracking-tight text-foreground">
+                  Drop your image here
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  or click to browse from your device
+                </p>
+                {maxSize && (
+                  <p className="pt-0.5 text-[11px] text-muted-foreground/80">
+                    Max size · {formatFileSize(maxSize)}
+                  </p>
+                )}
+              </div>
+            </div>
           )}
-      </div>
 
-      {/* Error message display */}
-      {errorMessage && (
-        <div className="mt-2 flex items-center text-xs text-destructive">
-          <AlertCircleIcon className="mr-1 h-4 w-4" />
-          <span>{errorMessage}</span>
+          {displayUrl && (isUploading || fileState?.status === 'UPLOADING') && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[2px]">
+              {isUploading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner size="icon" className="text-white" />
+                  <span className="text-xs font-medium text-white/90">
+                    Uploading…
+                  </span>
+                </div>
+              ) : (
+                <ProgressCircle progress={fileState.progress} />
+              )}
+            </div>
+          )}
+
+          {displayUrl &&
+            !disabled &&
+            !isUploading &&
+            fileState &&
+            fileState.status !== 'COMPLETE' && (
+              <button
+                type="button"
+                className="pointer-events-auto absolute right-2.5 top-2.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-lg backdrop-blur-sm transition-all hover:scale-105 hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (fileState.status === 'UPLOADING') {
+                    cancelUpload(fileState.key);
+                  } else {
+                    removeFile(fileState.key);
+                    setError(undefined);
+                  }
+                }}
+              >
+                {fileState.status === 'UPLOADING' ? (
+                  <XIcon className="h-4 w-4" />
+                ) : (
+                  <Trash2Icon className="h-4 w-4" />
+                )}
+              </button>
+            )}
         </div>
-      )}
-    </div>
-  );
-});
+
+        {errorMessage && (
+          <div
+            className="flex w-full items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-xs text-destructive"
+            style={{ maxWidth: width }}
+          >
+            <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
+            <span className="leading-relaxed">{errorMessage}</span>
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 SingleImageDropzone.displayName = 'SingleImageDropzone';
 
 export { SingleImageDropzone };

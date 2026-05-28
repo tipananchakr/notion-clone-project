@@ -29,8 +29,8 @@ export function SingleImageDropzone({
   className,
   disabled,
   isUploading,
-  height = 200,
-  width = 200,
+  height = 220,
+  width = 400,
   dropzoneOptions,
 }: SingleImageDropzoneProps) {
   const { edgestore } = useEdgeStore();
