@@ -263,6 +263,30 @@ export const getById = query({
     },
 });
 
+export const getPublishedById = query({
+  args: {
+    documentId: v.id("documents"),
+  },
+
+  handler: async (ctx, args) => {
+    const document = await ctx.db.get(args.documentId)
+
+    if (!document) {
+      return null
+    }
+
+    if (!document.isPublished) {
+      return null
+    }
+
+    if (document.isArchived) {
+      return null
+    }
+
+    return document
+  },
+})
+
 export const update = mutation({
     args: {
         id: v.id("documents"),
