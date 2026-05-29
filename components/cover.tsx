@@ -12,6 +12,7 @@ import { api } from "@/convex/_generated/api";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { Skeleton } from "./ui/skeleton";
 
 interface CoverProps {
   url?: string;
@@ -79,5 +80,11 @@ export const Cover = ({
         </div>
       )}
     </div>
+  )
+}
+
+Cover.Skeleton = function CoverSkeleton() {
+  return (
+    <Skeleton className="w-full h-[12vh]"/>
   )
 }

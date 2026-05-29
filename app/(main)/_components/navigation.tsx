@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils"
 import { ChevronsLeft, MenuIcon, Plus, PlusCircle, Search, SettingsIcon, Trash } from "lucide-react"
-import { useParams, usePathname } from "next/navigation"
+import { useParams, usePathname, useRouter } from "next/navigation"
 import { ElementRef, useEffect, useRef, useState } from "react"
 import { useMediaQuery } from "usehooks-ts"
 import { UserItem } from "./user-item"
-import { useMutation, useQuery } from "convex/react"
+import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Item } from "./item"
 import { toast } from "sonner"
@@ -16,6 +16,7 @@ import { useSetting } from "@/hooks/use-setting"
 import { Navbar } from "./navbar"
 
 export const Navigation = () => {
+  const router = useRouter()
   const setting = useSetting()
   const search = useSearch()
   const params = useParams()
@@ -91,6 +92,7 @@ export const Navigation = () => {
     const promise = create({
       title: "Untitled"
     })
+    .then((documentId)=>router.push(`/documents/${documentId}`))
 
     toast.promise(promise, {
       loading: "Creating a new note...",
